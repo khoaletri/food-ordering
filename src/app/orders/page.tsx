@@ -40,15 +40,23 @@ const OrdersPage = () => {
     },
   });
 
-  const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const input = form.elements[0] as HTMLInputElement;
-    const status = input.value;
+const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const input = form.elements[0] as HTMLInputElement;
+  const status = input.value;
 
-    mutation.mutate({ id, status });
-    toast.success("The order status has been changed!");
-  };
+
+  const validStatusValues = ["Not Paid!", "Paid", "Delivered"];
+
+  if (!validStatusValues.includes(status)) {
+    toast.error("Invalid status!");
+    return; 
+  }
+
+  mutation.mutate({ id, status });
+  toast.success("The order status has been changed!");
+};
 
   const [selectedStatus, setSelectedStatus] = useState("All");
 
