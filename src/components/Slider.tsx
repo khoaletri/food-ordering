@@ -10,7 +10,7 @@ const data = [
   },
   {
     id: 2,
-    title: "we deliver your order wherever you are in NY",
+    title: "we deliver your order wherever you are in HCM",
     image: "/slide2.png",
   },
   {

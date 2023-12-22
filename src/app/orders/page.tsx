@@ -1,17 +1,16 @@
 "use client";
 
+import React, { useState } from "react";
 import { OrderType } from "@/types/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React from "react";
 import { toast } from "react-toastify";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 
 const OrdersPage = () => {
   const { data: session, status } = useSession();
-
   const router = useRouter();
 
   if (status === "unauthenticated") {
@@ -29,7 +28,7 @@ const OrdersPage = () => {
   const mutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => {
       return fetch(`http://localhost:3000/api/orders/${id}`, {
-        method:"PUT",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -48,13 +47,43 @@ const OrdersPage = () => {
     const status = input.value;
 
     mutation.mutate({ id, status });
-    toast.success("The order status has been changed!")
+    toast.success("The order status has been changed!");
   };
+
+  const [selectedStatus, setSelectedStatus] = useState("All");
+
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedStatus(e.target.value);
+  };
+
+  const filteredOrders =
+    selectedStatus === "All"
+      ? data
+      : data.filter((item: OrderType) => item.status === selectedStatus);
 
   if (isLoading || status === "loading") return "Loading...";
 
   return (
     <div className="p-4 lg:px-20 xl:px-40">
+      {/* Dropdown for status filter */}
+      <div className="flex justify-end mb-4 items-center">
+        <label htmlFor="statusFilter" className="text-lg font-semibold mr-2">
+          Filter orders by status:
+        </label>
+        <select
+          id="statusFilter"
+          className="p-2 rounded-md border border-gray-300"
+          value={selectedStatus}
+          onChange={handleStatusFilterChange}
+        >
+          <option value="All">All</option>
+          <option value="Not Paid!">Not Paid!</option>
+          <option value="Paid">Paid</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+      </div>
+
+      {/* Table for displaying orders */}
       <table className="w-full border-separate border-spacing-3">
         <thead>
           <tr className="text-left">
@@ -67,11 +96,12 @@ const OrdersPage = () => {
           </tr>
         </thead>
         <tbody>
-          {data.map((item: OrderType) => (
+          {filteredOrders.map((item: OrderType) => (
             <tr
               className={`${item.status !== "delivered" && "bg-red-50"}`}
               key={item.id}
             >
+              {/* Columns for each order */}
               <td className="hidden md:block py-6 px-1">{item.id}</td>
               <td className="py-6 px-1">
                 {item.createdAt.toString().slice(0, 10)}
