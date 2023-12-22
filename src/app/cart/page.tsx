@@ -10,11 +10,16 @@ const CartPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const deliveryCost = totalPrice > 50 ? 0 : 10; // Calculate delivery cost based on total price
+  let deliveryCost = 10; // Default delivery cost
+
+  if (totalItems === 0 || totalPrice > 50) {
+    deliveryCost = 0; // If no items in cart or total price exceeds $50, delivery is free
+  }
 
   useEffect(() => {
     useCartStore.persist.rehydrate();
   }, []);
+
 
   const handleCheckout = async () => {
     if (!session) {
@@ -28,7 +33,7 @@ const CartPage = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            price: totalAmount, // Update the price in the request to include delivery cost
+            price: totalAmount, 
             products,
             status: "Not Paid!",
             userEmail: session.user.email,
@@ -82,7 +87,7 @@ const CartPage = () => {
         <div className="flex justify-between">
           <span className="">Delivery Cost</span>
           <span className="text-green-500">
-            {totalPrice > 50 ? "FREE!" : `$${deliveryCost}`}
+            {totalItems === 0 || totalPrice > 50 ? "FREE!" : `$${deliveryCost}`}
           </span>
         </div>
         <hr className="my-2" />
