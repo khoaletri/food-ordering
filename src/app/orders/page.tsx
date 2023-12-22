@@ -94,15 +94,16 @@ const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
       {/* Table for displaying orders */}
       <table className="w-full border-separate border-spacing-3">
         <thead>
-          <tr className="text-left">
-            <th className="hidden md:block">Order ID</th>
-            <th>Date</th>
-            <th>Price</th>
-            <th className="hidden md:block">Products</th>
-            <th>Status</th>
-            {session?.user?.isAdmin && <th>Action</th>}
-          </tr>
-        </thead>
+    <tr className="text-left">
+      <th className="hidden md:block">Order ID</th>
+      <th>User</th> 
+      <th>Date</th>
+      <th>Price</th>
+      <th className="hidden md:block">Products</th>
+      <th>Status</th>
+      {session?.user?.isAdmin && <th>Action</th>}
+    </tr>
+  </thead>
         <tbody>
           {filteredOrders.map((item: OrderType) => (
             <tr
@@ -111,10 +112,11 @@ const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
             >
               {/* Columns for each order */}
               <td className="hidden md:block py-6 px-1">{item.id}</td>
+              <td className="py-6 px-1">{item.userEmail}</td> 
               <td className="py-6 px-1">
                 {item.createdAt.toString().slice(0, 10)}
               </td>
-              <td className="py-6 px-1">{item.price}</td>
+              <td className="py-6 px-1">${item.price}</td>
               <td className="hidden md:block py-6 px-1">
                 {item.products[0].title}
               </td>
