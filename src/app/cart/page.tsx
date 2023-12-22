@@ -10,6 +10,8 @@ const CartPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
+  const deliveryCost = totalPrice > 50 ? 0 : 10; // Calculate delivery cost based on total price
+
   useEffect(() => {
     useCartStore.persist.rehydrate();
   }, []);
@@ -19,18 +21,22 @@ const CartPage = () => {
       router.push("/login");
     } else {
       try {
+        const deliveryCost = totalPrice > 50 ? 0 : 10;
+        const totalAmount = totalPrice + deliveryCost;
+
         const res = await fetch("http://localhost:3000/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            price: totalPrice,
+            price: totalAmount, // Update the price in the request to include delivery cost
             products,
             status: "Not Paid!",
             userEmail: session.user.email,
           }),
         });
-        const data =await res.json()
-        router.push(`/pay/${data.id}`)
+
+        const data = await res.json();
+        router.push(`/pay/${data.id}`);
       } catch (err) {
         console.log(err);
       }
@@ -75,12 +81,14 @@ const CartPage = () => {
         </div>
         <div className="flex justify-between">
           <span className="">Delivery Cost</span>
-          <span className="text-green-500">FREE!</span>
+          <span className="text-green-500">
+            {totalPrice > 50 ? "FREE!" : `$${deliveryCost}`}
+          </span>
         </div>
         <hr className="my-2" />
         <div className="flex justify-between">
           <span className="">TOTAL(INCL. VAT)</span>
-          <span className="font-bold">${totalPrice}</span>
+          <span className="font-bold">${totalPrice + deliveryCost}</span>
         </div>
         <button
           className="bg-red-500 text-white p-3 rounded-md w-1/2 self-end"
