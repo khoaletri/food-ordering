@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "react-toastify";
+import DeleteOrderButton from "@/components/DeleteOrderButton";
 
 const OrdersPage = () => {
   const { data: session, status } = useSession();
@@ -62,11 +63,15 @@ const OrdersPage = () => {
             <th>Price</th>
             <th className="hidden md:block">Products</th>
             <th>Status</th>
+            {session?.user?.isAdmin && <th>Action</th>}
           </tr>
         </thead>
         <tbody>
           {data.map((item: OrderType) => (
-            <tr className={`${item.status !== "delivered" && "bg-red-50"}`} key={item.id}>
+            <tr
+              className={`${item.status !== "delivered" && "bg-red-50"}`}
+              key={item.id}
+            >
               <td className="hidden md:block py-6 px-1">{item.id}</td>
               <td className="py-6 px-1">
                 {item.createdAt.toString().slice(0, 10)}
@@ -75,8 +80,8 @@ const OrdersPage = () => {
               <td className="hidden md:block py-6 px-1">
                 {item.products[0].title}
               </td>
-              {session?.user.isAdmin ? (
-                <td>
+              <td className="py-6 px-1">
+                {session?.user?.isAdmin ? (
                   <form
                     className="flex items-center justify-center gap-4"
                     onSubmit={(e) => handleUpdate(e, item.id)}
@@ -89,9 +94,14 @@ const OrdersPage = () => {
                       <Image src="/edit.png" alt="" width={20} height={20} />
                     </button>
                   </form>
+                ) : (
+                  item.status
+                )}
+              </td>
+              {session?.user?.isAdmin && (
+                <td>
+                  <DeleteOrderButton id={item.id} />
                 </td>
-              ) : (
-                <td className="py-6 px-1">{item.status}</td>
               )}
             </tr>
           ))}
