@@ -71,10 +71,49 @@ const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
 
   if (isLoading || status === "loading") return "Loading...";
 
+  const calculateProfit = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // Month is zero-indexed, so add 1
+    const currentYear = currentDate.getFullYear();
+
+    // Filter orders for the current month
+    const currentMonthOrders = data.filter((order: OrderType) => {
+      const orderDate = new Date(order.createdAt);
+      const orderMonth = orderDate.getMonth() + 1;
+      const orderYear = orderDate.getFullYear();
+      return (
+        orderMonth === currentMonth &&
+        orderYear === currentYear &&
+        (order.status === "Paid" || order.status === "Delivered")
+      );
+    });
+
+    // Calculate total profit for the current month
+    const totalProfit = currentMonthOrders.reduce(
+      (sum: number, order: OrderType) => sum + Number(order.price),
+      0
+    );
+
+    return totalProfit;
+  };
+
+  // Call the calculateProfit function to get the profit for the current month
+  const currentMonthProfit = calculateProfit();
+
+    const getCurrentMonthYear = () => {
+    const currentDate = new Date();
+    const month = new Intl.DateTimeFormat('en', { month: 'long' }).format(currentDate);
+    const year = currentDate.getFullYear();
+    return `${month} ${year}`;
+  };
+
+  const currentMonthYear = getCurrentMonthYear();
+
   return (
     <div className="p-4 lg:px-20 xl:px-40">
+       <div className="flex p-4 justify-between items-center mb-4">
       {/* Dropdown for status filter */}
-      <div className="flex justify-end mb-4 items-center">
+      <div className="flex items-center">
         <label htmlFor="statusFilter" className="text-lg font-semibold mr-2">
           Filter orders by status:
         </label>
@@ -90,6 +129,16 @@ const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
           <option value="Delivered">Delivered</option>
         </select>
       </div>
+
+      {/* Display profit */}
+      {session?.user?.isAdmin && ( // Check if the user is an admin
+        <div>
+          <h2 className="text-lg font-semibold mb-2">
+            Profit for {currentMonthYear}: ${currentMonthProfit}
+          </h2>
+        </div>
+      )}
+    </div>
 
       {/* Table for displaying orders */}
       <table className="w-full border-separate border-spacing-3">
