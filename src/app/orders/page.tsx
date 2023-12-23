@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
+import Link from "next/link";
 
 const OrdersPage = () => {
   const { data: session, status } = useSession();
@@ -40,119 +41,106 @@ const OrdersPage = () => {
     },
   });
 
-const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
-  e.preventDefault();
-  const form = e.target as HTMLFormElement;
-  const input = form.elements[0] as HTMLInputElement;
-  const status = input.value;
+  const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const input = form.elements[0] as HTMLInputElement;
+    const status = input.value;
 
+    const validStatusValues = ["Not Paid!", "Paid", "Delivered"];
 
-  const validStatusValues = ["Not Paid!", "Paid", "Delivered"];
+    if (!validStatusValues.includes(status)) {
+      toast.error("Invalid status!");
+      return;
+    }
 
-  if (!validStatusValues.includes(status)) {
-    toast.error("Invalid status!");
-    return; 
-  }
-
-  mutation.mutate({ id, status });
-  toast.success("The order status has been changed!");
-};
+    mutation.mutate({ id, status });
+    toast.success("The order status has been changed!");
+  };
 
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [userEmail, setUserEmail] = useState("");
 
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedStatus(e.target.value);
   };
 
-  const filteredOrders =
-    selectedStatus === "All"
-      ? data
-      : data.filter((item: OrderType) => item.status === selectedStatus);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserEmail(e.target.value);
+  };
+
+  const filteredByStatus = selectedStatus === "All"
+    ? data
+    : data.filter((item: OrderType) => item.status === selectedStatus);
+
+  const filteredOrders = userEmail
+    ? filteredByStatus.filter((item: OrderType) =>
+        item.userEmail.toLowerCase().includes(userEmail.toLowerCase())
+      )
+    : filteredByStatus;
 
   if (isLoading || status === "loading") return "Loading...";
 
-  const calculateProfit = () => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // Month is zero-indexed, so add 1
-    const currentYear = currentDate.getFullYear();
+return (
+  <div className="p-4 lg:px-20 xl:px-40">
+      <div className="flex p-4 justify-between items-center mb-4">
+  {/* Dropdown for status filter */}
+  <div className="flex items-center">
+    <label htmlFor="statusFilter" className="text-lg font-semibold mr-2">
+      Filter orders by status:
+    </label>
+    <select
+      id="statusFilter"
+      className="p-2 rounded-md border border-gray-300"
+      value={selectedStatus}
+      onChange={handleStatusFilterChange}
+    >
+      <option value="All">All</option>
+      <option value="Not Paid!">Not Paid!</option>
+      <option value="Paid">Paid</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+  </div>
 
-    // Filter orders for the current month
-    const currentMonthOrders = data.filter((order: OrderType) => {
-      const orderDate = new Date(order.createdAt);
-      const orderMonth = orderDate.getMonth() + 1;
-      const orderYear = orderDate.getFullYear();
-      return (
-        orderMonth === currentMonth &&
-        orderYear === currentYear &&
-        (order.status === "Paid" || order.status === "Delivered")
-      );
-    });
-
-    // Calculate total profit for the current month
-    const totalProfit = currentMonthOrders.reduce(
-      (sum: number, order: OrderType) => sum + Number(order.price),
-      0
-    );
-
-    return totalProfit;
-  };
-
-  // Call the calculateProfit function to get the profit for the current month
-  const currentMonthProfit = calculateProfit();
-
-    const getCurrentMonthYear = () => {
-    const currentDate = new Date();
-    const month = new Intl.DateTimeFormat('en', { month: 'long' }).format(currentDate);
-    const year = currentDate.getFullYear();
-    return `${month} ${year}`;
-  };
-
-  const currentMonthYear = getCurrentMonthYear();
-
-  return (
-    <div className="p-4 lg:px-20 xl:px-40">
-       <div className="flex p-4 justify-between items-center mb-4">
-      {/* Dropdown for status filter */}
-      <div className="flex items-center">
-        <label htmlFor="statusFilter" className="text-lg font-semibold mr-2">
-          Filter orders by status:
-        </label>
-        <select
-          id="statusFilter"
-          className="p-2 rounded-md border border-gray-300"
-          value={selectedStatus}
-          onChange={handleStatusFilterChange}
-        >
-          <option value="All">All</option>
-          <option value="Not Paid!">Not Paid!</option>
-          <option value="Paid">Paid</option>
-          <option value="Delivered">Delivered</option>
-        </select>
-      </div>
-
-      {/* Display profit */}
-      {session?.user?.isAdmin && ( // Check if the user is an admin
-        <div>
-          <h2 className="text-lg font-semibold mb-2">
-            Profit for {currentMonthYear}: ${currentMonthProfit}
-          </h2>
-        </div>
-      )}
+  {/* Display email search input if user is admin */}
+  {session?.user?.isAdmin && (
+    <div className="flex items-center">
+      <label htmlFor="searchInput" className="text-lg font-semibold mr-2">
+        Search by Email:
+      </label>
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Enter email"
+        value={userEmail}
+        onChange={handleEmailChange}
+        className="border border-gray-300 rounded py-2 px-4"
+      />
     </div>
+  )}
+
+  {/* Display link to Profit Report for admin users */}
+  {session?.user?.isAdmin && (
+    <Link href="/reports" className="text-red-600 font-bold">
+      Profit Report
+    </Link>
+  )}
+</div>
 
       {/* Table for displaying orders */}
       <table className="w-full border-separate border-spacing-3">
+        {/* Table headers */}
         <thead>
-    <tr className="text-left">
-      <th className="hidden md:block">Order ID</th>
-      <th>User</th> 
-      <th>Date</th>
-      <th>Price</th>
-      <th className="hidden md:block">Products</th>
-      <th>Status</th>
-      {session?.user?.isAdmin && <th>Action</th>}
-    </tr>
-  </thead>
+          <tr className="text-left">
+            <th className="hidden md:block">Order ID</th>
+            <th>User</th>
+            <th>Date</th>
+            <th>Price</th>
+            <th className="hidden md:block">Products</th>
+            <th>Status</th>
+            {session?.user?.isAdmin && <th>Action</th>}
+          </tr>
+        </thead>
         <tbody>
           {filteredOrders.map((item: OrderType) => (
             <tr
@@ -161,7 +149,7 @@ const handleUpdate = (e: React.FormEvent<HTMLFormElement>, id: string) => {
             >
               {/* Columns for each order */}
               <td className="hidden md:block py-6 px-1">{item.id}</td>
-              <td className="py-6 px-1">{item.userEmail}</td> 
+              <td className="py-6 px-1">{item.userEmail}</td>
               <td className="py-6 px-1">
                 {item.createdAt.toString().slice(0, 10)}
               </td>
