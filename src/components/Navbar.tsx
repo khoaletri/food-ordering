@@ -5,6 +5,7 @@ import CartIcon from "./CartIcon";
 import Image from "next/image";
 import UserLinks from "./UserLinks";
 import SearchInput from "./SearchInput";
+import UsersButton from "./UsersButton";
 
 const Navbar = () => {
   const user = false;
@@ -30,6 +31,7 @@ const Navbar = () => {
           <Image src="/phone.png" alt="" width={20} height={20} />
           <span>123 456 78</span>
         </div>
+        <UsersButton />
         <UserLinks/>
         <CartIcon />
       </div>
